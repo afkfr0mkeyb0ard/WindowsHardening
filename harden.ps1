@@ -18,3 +18,7 @@ Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Services\NetBT\Parameters
 #Disabling SMBv1
 Write-Host "[+] Disabling SMBv1"
 Disable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol
+
+#Prefer IPv4 over IPv6
+Write-Host "[+] Disabling IPv6"
+if (-not (Test-Path "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters")) { New-Item -Path "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters" -Name "DisabledComponents" -Force } ; Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters" -Name "DisabledComponents" -Type DWord -Value 32 -Force

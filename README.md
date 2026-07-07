@@ -7,69 +7,56 @@ powershell -ep b -nop -c "$w=(New-Object Net.WebClient);IEX $w.DownloadString('h
 
 ## Windows Hardening Impact Assessment (Sorted by Impact)
 
-### Low Impact Changes
-
-| Hardening Parameter | Potential Impact | Recommendation |
+| Impact | Modification | Possible impact / side effects |
 |---|---|---|
-| Disable Microsoft Store | Prevents users from installing apps from Microsoft Store | Recommended for corporate environments |
-| Disable Windows Telemetry | Reduces diagnostic data collection sent to Microsoft | Recommended |
-| Disable Windows Error Reporting | Prevents automatic crash reports from being sent | Recommended in restricted environments |
-| Disable Location Services | Applications cannot use device location | Recommended unless location-based apps are required |
-| Block Microsoft Accounts | Prevents personal Microsoft account usage | Recommended for domain-joined devices |
-| Disable Windows Search Web Search | Removes Bing/web results from Windows Search | Recommended |
-| Disable WPAD | Automatic proxy discovery disabled | Recommended to prevent WPAD attacks |
-| Disable SMB Compression | Minor performance impact on SMB transfers | Recommended |
-| Disable SMBv1 | Legacy SMB applications may stop working | Strongly recommended |
-| Disable AutoRun / AutoPlay | USB media will no longer automatically execute content | Recommended |
-| Disable Remote Registry | Remote registry administration tools stop working | Recommended |
-| Disable PowerShell v2 | Legacy PowerShell scripts may fail | Recommended |
-| Disable Consumer Experience | Removes Microsoft suggestions and promoted apps | Recommended |
-| Disable Advertising ID | Personalized advertising disabled | Recommended |
-| Disable Tailored Experiences | Personalized Windows recommendations disabled | Recommended |
-| Disable Activity History | Timeline and activity sync disabled | Recommended |
-| Disable Clipboard Cloud Sync | Clipboard synchronization between devices disabled | Recommended |
-| Disable Cortana | Voice assistant features unavailable | Recommended |
-| Disable Widgets | Windows widgets unavailable | Recommended for enterprise |
-| Disable Copilot | AI assistant unavailable | Recommended depending on policy |
-| Disable SSDP Discovery | UPnP device discovery disabled | Recommended |
-| Disable UPnP Device Host | Automatic device discovery disabled | Recommended |
-| Disable DiagTrack Service | Windows telemetry service disabled | Recommended |
-| Enable LSA Protection (RunAsPPL) | Some unsigned security software may fail | Recommended |
-| Disable WDigest | Legacy authentication compatibility reduced | Recommended |
-| Disable NTLMv1 | Very old systems may fail authentication | Strongly recommended |
-| Require NTLMv2 | Legacy devices may fail authentication | Recommended |
-| Disable Weak Ciphers (RC4/3DES) | Legacy encryption compatibility reduced | Recommended |
-| Enable PowerShell Script Block Logging | Increased event log volume | Recommended |
-| Enable PowerShell Module Logging | Increased event log volume | Recommended |
-| Enable Process Creation Auditing | Increased Security Event Log size | Recommended |
-| Enforce UAC | Users receive more elevation prompts | Recommended |
-
----
-
-### Medium Impact Changes
-
-| Hardening Parameter | Potential Impact | Recommendation |
-|---|---|---|
-| Disable OneDrive | Prevents OneDrive synchronization and cloud file access | Validate before deployment |
-| Disable SMB Guest Logons | Legacy NAS devices and unauthenticated shares may stop working | Recommended |
-| Disable Internet Connection Sharing | Users cannot share network connections | Recommended on managed devices |
-| Disable Delivery Optimization | Windows updates consume more WAN bandwidth | Validate in large environments |
-| Disable WebClient | WebDAV/SharePoint mapped drives may stop working | Validate |
-| Enable SMB Signing | Slight SMB performance overhead | Recommended |
-| Disable TLS 1.0 | Old applications may lose HTTPS compatibility | Recommended |
-| Disable TLS 1.1 | Old applications may lose HTTPS compatibility | Recommended |
-| Enable Defender ASR Rules | Some legitimate applications/macros may be blocked | Deploy in Audit Mode first |
-| Enable Credential Guard | Some authentication scenarios may require testing | Recommended on compatible hardware |
-| Enable HVCI / Memory Integrity | Some drivers may become incompatible | Recommended after validation |
-| Enable Controlled Folder Access | Applications may require exclusions | Recommended with tuning |
-
----
-
-### High Impact Changes
-
-| Hardening Parameter | Potential Impact | Recommendation |
-|---|---|---|
-| Disable Windows Script Host | VBS/JS scripts and some legacy installers may fail | Enable only if unused |
-| Disable WinRM | Breaks PowerShell Remoting and some management tools | Only disable if unused |
-| Disable RDP | Remote Desktop access disabled | Only disable if unused |
-| Disable Print Spooler | Printing unavailable | Only disable on systems without printers |
+| 🔴 High | Disable Microsoft Accounts | Prevents the use of personal Microsoft accounts. May affect Microsoft Store, synchronization, and some Windows 11 features. |
+| 🔴 High | Disable IPv6 (`DisabledComponents=32`) | May break modern environments using IPv6, Entra ID/Azure AD scenarios, DirectAccess, or applications relying on IPv6. Prefer IPv4 preference instead of full disablement. |
+| 🔴 High | Disable Windows Store | Prevents Microsoft Store applications installation and updates. Some modern Windows applications may be affected. |
+| 🔴 High | Enable LSA Protection (`RunAsPPL`) | May cause compatibility issues with older security software, credential providers, or legacy drivers. |
+| 🔴 High | Enable Credential Guard | May break legacy authentication scenarios, NTLM-dependent applications, VPN clients, or credential delegation workflows. |
+| 🔴 High | Disable WinRM | Removes remote PowerShell administration and Windows Remote Management capabilities. |
+| 🔴 High | Disable Remote Desktop | Prevents incoming RDP connections. |
+| 🔴 High | Disable Print Spooler | Prevents local and network printing functionality. |
+| 🔴 High | Enable SMB Signing | Can impact performance and compatibility with legacy NAS devices or older SMB implementations. |
+| 🟠 Medium-High | Disable NTLMv1 (`LmCompatibilityLevel=5`) | May break legacy applications or systems requiring NTLMv1 authentication. |
+| 🟠 Medium-High | Disable SMB Guest Logons | Prevents access to anonymous SMB shares and some legacy NAS configurations. |
+| 🟠 Medium-High | Disable SMB Compression | May reduce SMB transfer performance on large file operations. |
+| 🟠 Medium | Disable PowerShell v2 | Legacy PowerShell v2 scripts and tools will no longer work. |
+| 🟠 Medium | Disable Windows Script Host | Prevents execution of `.vbs` and `.js` scripts using WSH. |
+| 🟠 Medium | Disable WebClient (WebDAV) | May break WebDAV-based applications or legacy SharePoint integrations. |
+| 🟠 Medium | Disable OneDrive | Prevents OneDrive synchronization for personal and enterprise accounts. |
+| 🟠 Medium | Disable Delivery Optimization | Windows updates may consume more bandwidth because peer-to-peer optimization is disabled. |
+| 🟠 Medium | Disable Xbox Services / GameDVR | Removes Xbox integration, game recording, and gaming-related features. |
+| 🟠 Medium | Disable Widgets | Removes Windows Widgets functionality. |
+| 🟠 Medium | Disable Windows Copilot | Removes Copilot integration in Windows. |
+| 🟠 Medium | Disable Windows Recall | Disables Recall functionality on compatible Windows 11 devices. |
+| 🟠 Medium | Disable Location Services | Applications requiring location data (maps, weather, device location) may stop working correctly. |
+| 🟠 Medium | Disable Windows Search Web Search | Windows Search remains available but web results are removed. |
+| 🟠 Medium | Disable Windows Consumer Experience | Removes suggested applications and Microsoft promotional content. |
+| 🟠 Medium | Disable Windows Spotlight | Removes dynamic wallpapers and Spotlight suggestions. |
+| 🟠 Medium | Disable Feedback Hub | Prevents users from submitting feedback to Microsoft. |
+| 🟡 Low-Medium | Disable Telemetry (`AllowTelemetry=0`) | Reduces Microsoft diagnostics and may limit troubleshooting capabilities. |
+| 🟡 Low-Medium | Disable Connected User Experiences and Telemetry (`DiagTrack`) | Reduces telemetry collection and diagnostic functionality. |
+| 🟡 Low-Medium | Disable Windows Error Reporting | Crash information will no longer be automatically sent to Microsoft. |
+| 🟡 Low-Medium | Disable AutoRun / AutoPlay | Removable media will require manual interaction instead of automatic execution. |
+| 🟡 Low-Medium | Disable SSDP Discovery | UPnP network device discovery may stop working. |
+| 🟡 Low-Medium | Disable UPnP Device Host | Some multimedia and IoT devices may no longer be automatically discovered. |
+| 🟡 Low-Medium | Disable Internet Connection Sharing | Users cannot share their network connection from the workstation. |
+| 🟡 Low-Medium | Disable NBT-NS | May affect legacy environments relying on NetBIOS name resolution. |
+| 🟡 Low | Disable LLMNR | No expected impact in modern environments using DNS properly. |
+| 🟡 Low | Disable mDNS | May affect Bonjour discovery, AirPrint, Apple devices, or some IoT devices. |
+| 🟡 Low | Disable WPAD | May break environments relying on automatic proxy discovery. |
+| 🟡 Low | Disable Null Sessions | No expected impact on modern Windows environments. |
+| 🟡 Low | Disable LM Hash Storage | No expected impact on modern Windows systems. |
+| 🟡 Low | Disable WDigest Credential Storage | No expected impact on modern Windows systems. |
+| 🟡 Low | Enforce NTLMv2 | No expected impact except on very old systems. |
+| 🟢 Low | Disable Advertising ID | No functional impact. |
+| 🟢 Low | Disable Tailored Experiences | Removes personalized Windows recommendations. |
+| 🟢 Low | Disable Windows Tips and Suggestions | Removes Windows tips and recommendations. |
+| 🟢 Low | Disable Cortana | No meaningful impact on modern Windows versions. |
+| 🟢 Low | Disable Windows Error Dump Upload | Reduces automatic diagnostic information sharing. |
+| 🟢 Low | Disable Microsoft Store suggestions | Removes promotional Store recommendations. |
+| 🟢 Low | Defender ASR - Block Office Child Process Creation | May block legitimate Office automation workflows and macros. |
+| 🟢 Low | Defender ASR - Block Credential Stealing From LSASS | Very low compatibility impact, highly recommended. |
+| 🟢 Low | Defender ASR - Block Executables From Email/Webmail | May block legitimate downloaded executables. |
+| 🟢 Low | Defender ASR - Block Executables From USB | May block portable tools running from removable media. |

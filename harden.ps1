@@ -14,8 +14,8 @@ Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient" 
 
 #Disable mDNS
 Write-Host "[+] Disabling mDNS"
-if (-not (Test-Path "HKLM:\SYSTEM\CurrentControlSet\Services\Dnscache\Parameters\EnableMDNS")) { New-Item -Path "HKLM:\SYSTEM\CurrentControlSet\Services\Dnscache\Parameters" -Name "EnableMDNS" -Force } ;
-Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\Dnscache\Parameters" -Name "EnableMDNS" -Value 0 -Force
+if (-not (Test-Path "HKLM:\SYSTEM\CurrentControlSet\Services\Dnscache\Parameters")) { New-Item -Path "HKLM:\SYSTEM\CurrentControlSet\Services\Dnscache" -Name "Parameters" -Force } ;
+Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\Dnscache\Parameters" -Name "EnableMDNS" -Type DWord -Value 0 -Force
 
 #Disable NBTNS (Netbios over TCP)
 Write-Host "[+] Disabling NBTNS"
@@ -30,6 +30,11 @@ Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Internet
 Write-Host "[+] Disabling SMBv1"
 Disable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol
 
+#Enable SMB Signing
+Write-Host "[+] Enabling SMB Signing"
+Set-SmbServerConfiguration -RequireSecuritySignature $true -Force
+Set-SmbClientConfiguration -RequireSecuritySignature $true -Force
+
 #Disable SMB Compression
 Write-Host "[+] Disabling SMB Compression"
 Set-SmbServerConfiguration -DisableCompression $true -Force
@@ -38,6 +43,22 @@ Set-SmbServerConfiguration -DisableCompression $true -Force
 Write-Host "[+] Prefer IPv4 over IPv6"
 if (-not (Test-Path "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters")) { New-Item -Path "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters" -Name "DisabledComponents" -Force } ;
 Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters" -Name "DisabledComponents" -Type DWord -Value 32 -Force
+
+#Disable WDigest Credential Storage
+Write-Host "[+] Disabling WDigest"
+Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest" -Name "UseLogonCredential" -Type DWord -Value 0 -Force
+
+#Disable LM Hash Storage
+Write-Host "[+] Disabling LM Hash Storage"
+Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" -Name "NoLMHash" -Type DWord -Value 1 -Force
+
+#Enforce NTLMv2
+Write-Host "[+] Enforcing NTLMv2"
+Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" -Name "LmCompatibilityLevel" -Type DWord -Value 5 -Force
+
+#Enable LSA Protection
+Write-Host "[+] Enabling LSA Protection"
+Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" -Name "RunAsPPL" -Type DWord -Value 1 -Force
 
 #Disable WinRM
 Write-Host "[+] Disabling WinRM"
@@ -140,8 +161,6 @@ Write-Host "[+] Disabling OneDrive"
 if (-not (Test-Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OneDrive")) { New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows" -Name "OneDrive" -Force } ;
 Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OneDrive" -Name "DisableFileSyncNGSC" -Type DWord -Value 1 -Force
 Stop-Process -Name OneDrive -Force -ErrorAction SilentlyContinue
-Stop-Service OneSyncSvc -Force -ErrorAction SilentlyContinue
-Set-Service OneSyncSvc -StartupType Disabled -ErrorAction SilentlyContinue
 
 #Disable Consumer Experience
 Write-Host "[+] Disabling Windows Consumer Experience"
@@ -161,10 +180,25 @@ Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\CloudContent" 
 #Disable Delivery Optimization
 Write-Host "[+] Disabling Delivery Optimization"
 if (-not (Test-Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization")) { New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows" -Name "DeliveryOptimization" -Force } ;
-Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization" -Name "DODownloadMode" -Type DWord -Value 0 -Force
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DeliveryOptimization" -Name "DODownloadMode" -Type DWord -Value 100 -Force
 
 #Disable Cortana
 Write-Host "[+] Disabling Cortana"
 if (-not (Test-Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search")) { New-Item -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows" -Name "Windows Search" -Force } ;
 Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search" -Name "AllowCortana" -Type DWord -Value 0 -Force
 
+#Enable Microsoft Defender ASR Rule - Block Office Child Process Creation
+Write-Host "[+] Enabling Defender ASR Rule - Office Child Process Creation"
+Add-MpPreference -AttackSurfaceReductionRules_Ids "d4f940ab-401b-4efc-aadc-ad5f3c50688a" -AttackSurfaceReductionRules_Actions Enabled
+
+#Enable Microsoft Defender ASR Rule - Block Credential Stealing From LSASS
+Write-Host "[+] Enabling Defender ASR Rule - LSASS Credential Protection"
+Add-MpPreference -AttackSurfaceReductionRules_Ids "9e6c4e1f-7d60-472f-ba1a-a39ef669e4f2" -AttackSurfaceReductionRules_Actions Enabled
+
+#Enable Microsoft Defender ASR Rule - Block Executable Content From Email and Webmail
+Write-Host "[+] Enabling Defender ASR Rule - Email/Web Executables"
+Add-MpPreference -AttackSurfaceReductionRules_Ids "be9ba2d9-53ea-4cdc-84e5-9b1eeee46550" -AttackSurfaceReductionRules_Actions Enabled
+
+#Enable Microsoft Defender ASR Rule - Block Executables From USB
+Write-Host "[+] Enabling Defender ASR Rule - USB Executables"
+Add-MpPreference -AttackSurfaceReductionRules_Ids "b2b3f03d-6a65-4f7b-a9c7-1c7ef74f7c8d" -AttackSurfaceReductionRules_Actions Enabled
